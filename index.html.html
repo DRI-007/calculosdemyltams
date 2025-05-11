@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Multas Contratuais</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        :root {
+            --azul-escuro: #1a3e72;
+            --azul-medio: #2a5a9c;
+            --azul-claro: #4b86d4;
+            --azul-brilhante: #6ba3e8;
+            --azul-suave: #e6f0fa;
+            --branco: #ffffff;
+            --cinza-claro: #f5f7fa;
+            --verde: #4CAF50;
+            --vermelho: #e74c3c;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: var(--cinza-claro);
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--azul-escuro), var(--azul-medio));
+            color: white;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+
+        .container {
+            background-color: var(--branco);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .form-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--azul-escuro);
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--azul-claro);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(107, 163, 232, 0.2);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background-color: var(--azul-claro);
+            color: white;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.3s;
+            flex: 1;
+            min-width: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        button:hover {
+            background-color: var(--azul-medio);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        button.secondary {
+            background-color: var(--verde);
+        }
+
+        button.secondary:hover {
+            background-color: #3e8e41;
+        }
+
+        button.danger {
+            background-color: var(--vermelho);
+        }
+
+        button.danger:hover {
+            background-color: #c0392b;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin-top: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 900px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+            white-space: nowrap;
+        }
+
+        th {
+            background-color: var(--azul-escuro);
+            color: white;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+        }
+
+        tr:nth-child(even) {
+            background-color: var(--azul-suave);
+        }
+
+        tr:hover {
+            background-color: rgba(107, 163, 232, 0.1);
+        }
+
+        .table-input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+
+        .table-input:focus {
+            outline: none;
+            border-color: var(--azul-claro);
+        }
+
+        .resumo {
+            background-color: var(--azul-suave);
+            padding: 25px;
+            border-radius: 8px;
+            margin-top: 40px;
+            border-left: 5px solid var(--azul-medio);
+        }
+
+        .resumo h2 {
+            color: var(--azul-escuro);
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 22px;
+        }
+
+        .resumo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .resumo-item {
+            background-color: var(--branco);
+            padding: 15px;
+            border-radius: 6px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .resumo-item strong {
+            display: block;
+            font-size: 18px;
+            color: var(--azul-escuro);
+            margin-top: 5px;
+        }
+
+        .icon {
+            width: 20px;
+            height: 20px;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+
+        .small-btn {
+            padding: 6px 10px !important;
+            min-width: auto !important;
+            font-size: 14px !important;
+        }
+
+        @media (max-width: 768px) {
+            .form-section {
+                grid-template-columns: 1fr;
+            }
+
+            button {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Calculadora de Multas Contratuais</h1>
+    </div>
+
+    <div class="container">
+        <div class="form-section">
+            <div class="form-group">
+                <label for="contrato">Contrato:</label>
+                <input type="text" id="contrato" placeholder="Ex: CONTRATO 123/2023">
+            </div>
+
+            <div class="form-group">
+                <label for="processoSEI">Processo SEI nº:</label>
+                <input type="text" id="processoSEI" placeholder="Ex: 12345.000000/2023-00">
+            </div>
+        </div>
+
+        <div class="form-section">
+            <div class="form-group">
+                <label for="cnpj">CNPJ:</label>
+                <input type="text" id="cnpj" placeholder="Ex: 00.000.000/0000-00" maxlength="18">
+            </div>
+
+            <div class="form-group">
+                <label for="empenho">Empenho:</label>
+                <input type="text" id="empenho" placeholder="Ex: 2023NE000001">
+            </div>
+        </div>
+
+        <div class="form-section">
+            <div class="form-group">
+                <label for="montante">Montante Total do Contrato (R$):</label>
+                <input type="number" id="montante" placeholder="Ex: 100000" step="0.01">
+            </div>
+
+            <div class="form-group">
+                <label for="tipoMulta">Tipo de Multa:</label>
+                <select id="tipoMulta">
+                    <option value="moratoria">Moratória (% por dia de atraso)</option>
+                    <option value="compensatoria">Compensatória (% fixo sobre a parcela)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="aliquota">Alíquota (%):</label>
+                <input type="number" id="aliquota" placeholder="Ex: 0.15 para 0.15%" step="0.01">
+            </div>
+        </div>
+
+        <div class="form-group" id="diasAtrasoGroup">
+            <label for="maxDiasAtraso">Máximo de dias considerados para multa:</label>
+            <input type="number" id="maxDiasAtraso" placeholder="Ex: 30 (deixar 0 para sem limite)" value="30" min="0" max="30">
+        </div>
+
+        <div class="form-group">
+            <label for="observacoes">Observações:</label>
+            <textarea id="observacoes" placeholder="Informe aqui qualquer observação relevante sobre o cálculo"></textarea>
+        </div>
+
+        <div class="button-group">
+            <button onclick="adicionarParcela()">
+                <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                </svg>
+                Adicionar Parcela
+            </button>
+            <button onclick="calcularMultas()" class="secondary">
+                <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+                </svg>
+                Calcular Multas
+            </button>
+            <button onclick="gerarPDF()" class="secondary">
+                <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+                </svg>
+                Gerar PDF
+            </button>
+            <button onclick="limparTudo()" class="danger">
+                <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/>
+                </svg>
+                Limpar Tudo
+            </button>
+        </div>
+
+        <div class="table-container">
+            <table id="tabelaParcelas">
+                <thead>
+                    <tr>
+                        <th>Local/Descrição</th>
+                        <th>Quantidade</th>
+                        <th>Valor Unitário (R$)</th>
+                        <th>Valor Total (R$)</th>
+                        <th>Data Limite (Contrato)</th>
+                        <th>Data Efetiva Entrega</th>
+                        <th>Dias de Atraso</th>
+                        <th>Multa (R$)</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="corpoTabela">
+                    <!-- Linhas serão adicionadas aqui via JavaScript -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="resumo" id="resumoCalculo">
+            <h2>Resumo do Cálculo</h2>
+            <div class="resumo-grid" id="resumoContent">
+                <!-- Conteúdo será preenchido pelo JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Inicializa o jsPDF
+        const { jsPDF } = window.jspdf;
+
+        // Mostrar/ocultar campo de dias conforme tipo de multa
+        document.getElementById("tipoMulta").addEventListener("change", function() {
+            const tipoMulta = this.value;
+            document.getElementById("diasAtrasoGroup").style.display = tipoMulta === "moratoria" ? "block" : "none";
+        });
+
+        // Máscara para CNPJ
+        document.getElementById("cnpj").addEventListener("input", function() {
+            let value = this.value.replace(/\D/g, '');
+
+            if (value.length > 12) {
+                value = value.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4-$5");
+            } else if (value.length > 8) {
+                value = value.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})/, "$1.$2.$3/$4");
+            } else if (value.length > 5) {
+                value = value.replace(/^(\d{2})(\d{3})(\d{3})/, "$1.$2.$3");
+            } else if (value.length > 2) {
+                value = value.replace(/^(\d{2})(\d{3})/, "$1.$2");
+            }
+
+            this.value = value;
+        });
+
+        // Adiciona uma nova linha para parcela
+        function adicionarParcela() {
+            const corpoTabela = document.getElementById("corpoTabela");
+            const newRow = document.createElement("tr");
+
+            newRow.innerHTML = `
+                <td><input type="text" placeholder="Ex: Alagoas" class="table-input local"></td>
+                <td><input type="number" placeholder="Qtd" class="table-input quantidade" min="1" value="1"></td>
+                <td><input type="number" placeholder="R$" class="table-input valorUnitario" step="0.01" min="0"></td>
+                <td><input type="number" placeholder="R$" class="table-input valorTotal" step="0.01" readonly></td>
+                <td><input type="date" class="table-input dataLimite"></td>
+                <td><input type="date" class="table-input dataEfetivaEntrega"></td>
+                <td><input type="number" placeholder="Dias" class="table-input diasAtraso" readonly></td>
+                <td><input type="number" placeholder="R$" class="table-input multa" readonly></td>
+                <td>
+                    <button onclick="removerParcela(this)" class="danger small-btn">
+                        <svg style="width:16px;height:16px;" viewBox="0 0 24 24">
+                            <path fill="currentColor" d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z" />
+                        </svg>
+                    </button>
+                </td>
+            `;
+
+            corpoTabela.appendChild(newRow);
+
+            // Calcular valor total automaticamente
+            const inputs = newRow.querySelectorAll(".quantidade, .valorUnitario");
+            inputs.forEach(input => {
+                input.addEventListener("input", () => {
+                    const qtd = parseFloat(newRow.querySelector(".quantidade").value) || 0;
+                    const valor = parseFloat(newRow.querySelector(".valorUnitario").value) || 0;
+                    newRow.querySelector(".valorTotal").value = (qtd * valor).toFixed(2);
+                });
+            });
+
+            // Calcular dias de atraso quando datas forem alteradas
+            const dateInputs = newRow.querySelectorAll(".dataLimite, .dataEfetivaEntrega");
+            dateInputs.forEach(input => {
+                input.addEventListener("change", () => {
+                    calcularDiasAtraso(newRow);
+                });
+            });
+        }
+
+        // Função para formatar data no padrão brasileiro
+        function formatarDataBrasileira(dataString) {
+            if (!dataString || dataString === "N/A") return "N/A";
+
+            const data = new Date(dataString);
+            if (isNaN(data.getTime())) return "N/A";
+
+            const dia = String(data.getDate()).padStart(2, '0');
+            const mes = String(data.getMonth() + 1).padStart(2, '0');
+            const ano = data.getFullYear();
+
+            return `${dia}/${mes}/${ano}`;
+        }
+
+        // Calcula dias de atraso para uma linha específica
+        function calcularDiasAtraso(row) {
+            const dataLimite = new Date(row.querySelector(".dataLimite").value);
+            const dataEfetivaEntrega = new Date(row.querySelector(".dataEfetivaEntrega").value);
+
+            if (!isNaN(dataLimite.getTime()) && !isNaN(dataEfetivaEntrega.getTime())) {
+                const diffTime = dataEfetivaEntrega - dataLimite;
+                const diffDays = Math.max(0, Math.floor(diffTime / (1000 * 60 * 60 * 24)));
+                row.querySelector(".diasAtraso").value = diffDays;
+            } else {
+                row.querySelector(".diasAtraso").value = "";
+            }
+        }
+
+        // Remove uma parcela da tabela
+        function removerParcela(button) {
+            const row = button.closest("tr");
+            row.remove();
+            atualizarResumo();
+        }
+
+        // Limpa todos os dados do formulário
+        function limparTudo() {
+            if (confirm("Tem certeza que deseja limpar todos os dados?")) {
+                document.getElementById("contrato").value = "";
+                document.getElementById("processoSEI").value = "";
+                document.getElementById("cnpj").value = "";
+                document.getElementById("empenho").value = "";
+                document.getElementById("montante").value = "";
+                document.getElementById("aliquota").value = "";
+                document.getElementById("maxDiasAtraso").value = "30";
+                document.getElementById("observacoes").value = "";
+                document.getElementById("corpoTabela").innerHTML = "";
+                document.getElementById("resumoContent").innerHTML = "";
+            }
+        }
+
+        // Calcula todas as multas
+        function calcularMultas() {
+            const tipoMulta = document.getElementById("tipoMulta").value;
+            const aliquota = parseFloat(document.getElementById("aliquota").value) || 0;
+            const maxDias = tipoMulta === "moratoria" ? parseInt(document.getElementById("maxDiasAtraso").value) || 0 : 0;
+            const linhas = document.querySelectorAll("#corpoTabela tr");
+            let totalMulta = 0;
+
+            // Verifica se os campos obrigatórios estão preenchidos
+            if (isNaN(aliquota) || aliquota <= 0) {
+                alert("Por favor, informe uma alíquota válida maior que zero.");
+                return;
+            }
+
+            linhas.forEach(linha => {
+                const valorTotal = parseFloat(linha.querySelector(".valorTotal").value) || 0;
+                const diasAtraso = parseInt(linha.querySelector(".diasAtraso").value) || 0;
+                const multaInput = linha.querySelector(".multa");
+
+                let multa = 0;
+
+                if (tipoMulta === "moratoria") {
+                    // Multa moratória: valor * (alíquota/100) * dias (com limite de dias se definido)
+                    const diasCalculo = maxDias > 0 ? Math.min(diasAtraso, maxDias) : diasAtraso;
+                    multa = valorTotal * (aliquota / 100) * diasCalculo;
+                } else {
+                    // Multa compensatória: valor * (alíquota/100)
+                    multa = valorTotal * (aliquota / 100);
+                }
+
+                multaInput.value = multa.toFixed(2);
+                totalMulta += multa;
+            });
+
+            atualizarResumo(totalMulta);
+        }
+
+        // Atualiza o resumo com os dados calculados
+        function atualizarResumo(totalMulta = 0) {
+            const contrato = document.getElementById("contrato").value || "Não informado";
+            const processoSEI = document.getElementById("processoSEI").value || "Não informado";
+            const cnpj = document.getElementById("cnpj").value || "Não informado";
+            const empenho = document.getElementById("empenho").value || "Não informado";
+            const montante = parseFloat(document.getElementById("montante").value) || 0;
+            const tipoMulta = document.getElementById("tipoMulta").value;
+            const tipoMultaTexto = tipoMulta === "moratoria" ? "Moratória" : "Compensatória";
+            const aliquota = parseFloat(document.getElementById("aliquota").value) || 0;
+            const maxDias = document.getElementById("tipoMulta").value === "moratoria"
+                ? document.getElementById("maxDiasAtraso").value
+                : "N/A";
+
+            document.getElementById("resumoContent").innerHTML = `
+                <div class="resumo-item">
+                    <span>Contrato</span>
+                    <strong>${contrato}</strong>
+                </div>
+                <div class="resumo-item">
+                    <span>Processo SEI</span>
+                    <strong>${processoSEI}</strong>
+                </div>
+                <div class="resumo-item">
+                    <span>CNPJ</span>
+                    <strong>${cnpj}</strong>
+                </div>
+                <div class="resumo-item">
+                    <span>Empenho</span>
+                    <strong>${empenho}</strong>
+                </div>
+                <div class="resumo-item">
+                    <span>Tipo de Multa</span>
+                    <strong>${tipoMultaTexto}</strong>
+                </div>
+                <div class="resumo-item">
+                    <span>Alíquota</span>
+                    <strong>${aliquota}%</strong>
+                </div>
+                ${tipoMulta === "moratoria" ? `
+                <div class="resumo-item">
+                    <span>Máximo de Dias</span>
+                    <strong>${maxDias}</strong>
+                </div>
+                ` : ''}
+                <div class="resumo-item">
+                    <span>Montante do Contrato</span>
+                    <strong>R$ ${montante.toFixed(2)}</strong>
+                </div>
+                <div class="resumo-item">
+                    <span>Total de Multas ${tipoMultaTexto.toLowerCase()}</span>
+                    <strong>R$ ${totalMulta.toFixed(2)}</strong>
+                </div>
+            `;
+        }
+
+        // Gera o PDF com os resultados
+        function gerarPDF() {
+            const doc = new jsPDF();
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const margin = 14;
+            const maxWidth = pageWidth - margin * 2;
+
+            // Função para adicionar texto com quebra de linha
+            const addText = (text, x, y, isBold = false) => {
+                doc.setFont("helvetica", isBold ? "bold" : "normal");
+                const lines = doc.splitTextToSize(text, maxWidth);
+                doc.text(lines, x, y);
+                return y + lines.length * 7;
+            };
+
+            // Cabeçalho
+            doc.setFontSize(18);
+            doc.setTextColor(26, 62, 114);
+            doc.text("RELATÓRIO DE CÁLCULO DE MULTAS", pageWidth / 2, 20, { align: "center" });
+
+            // Informações básicas
+            doc.setFontSize(12);
+            doc.setTextColor(0, 0, 0);
+
+            let yPos = 35;
+            const tipoMulta = document.getElementById("tipoMulta").value;
+            const tipoMultaTexto = tipoMulta === "moratoria" ? "Moratória" : "Compensatória";
+
+            const campos = [
+                `Contrato: ${document.getElementById("contrato").value || "Não informado"}`,
+                `Processo SEI: ${document.getElementById("processoSEI").value || "Não informado"}`,
+                `CNPJ: ${document.getElementById("cnpj").value || "Não informado"}`,
+                `Empenho: ${document.getElementById("empenho").value || "Não informado"}`,
+                `Tipo de Multa: ${tipoMultaTexto} (${document.getElementById("aliquota").value || 0}%)`,
+                `Montante do Contrato: R$ ${(parseFloat(document.getElementById("montante").value) || 0).toFixed(2)}`
+            ];
+
+            // Adiciona campos dinamicamente
+            campos.forEach(campo => {
+                yPos = addText(campo, margin, yPos);
+            });
+
+            // Adiciona máximo de dias se for multa moratória
+            if (tipoMulta === "moratoria") {
+                yPos = addText(`Máximo de dias considerados: ${document.getElementById("maxDiasAtraso").value || 30}`, margin, yPos);
+            }
+
+            // Observações (com tratamento especial)
+            yPos += 10;
+            yPos = addText("Observações:", margin, yPos, true);
+            yPos = addText(document.getElementById("observacoes").value || "Nenhuma observação informada.", margin, yPos);
+            yPos += 15;
+
+            // Tabela de parcelas
+            const linhas = document.querySelectorAll("#corpoTabela tr");
+            let dadosTabela = [];
+            let totalMulta = 0;
+
+            linhas.forEach(linha => {
+                const cols = linha.querySelectorAll(".table-input");
+                const valorTotal = parseFloat(cols[3].value) || 0;
+                const multa = parseFloat(cols[7].value) || 0;
+                totalMulta += multa;
+
+                dadosTabela.push([
+                    cols[0].value || "N/A",
+                    cols[1].value || "N/A",
+                    `R$ ${(parseFloat(cols[2].value) || 0).toFixed(2)}`,
+                    `R$ ${valorTotal.toFixed(2)}`,
+                    formatarDataBrasileira(cols[4].value),
+                    formatarDataBrasileira(cols[5].value),
+                    cols[6].value || "N/A",
+                    `R$ ${multa.toFixed(2)}`
+                ]);
+            });
+
+            // Configuração da tabela
+            doc.autoTable({
+                head: [["Local", "Qtd", "Valor Unit.", "Valor Total", "Data Limite", "Data Entrega", "Dias Atraso", "Multa"]],
+                body: dadosTabela,
+                startY: yPos,
+                headStyles: {
+                    fillColor: [26, 62, 114],
+                    textColor: [255, 255, 255],
+                    fontSize: 8
+                },
+                bodyStyles: {
+                    fontSize: 7
+                },
+                alternateRowStyles: {
+                    fillColor: [230, 240, 250]
+                }
+            });
+
+            // Totais
+            const finalY = doc.autoTable.previous.finalY + 15;
+            doc.setFontSize(14);
+            doc.setTextColor(26, 62, 114);
+            doc.text("TOTAIS", margin, finalY);
+
+            doc.setFontSize(12);
+            doc.setTextColor(0, 0, 0);
+            addText(`Montante do Contrato: R$ ${(parseFloat(document.getElementById("montante").value) || 0).toFixed(2)}`, margin, finalY + 10);
+
+            // Texto do total de multas conforme tipo selecionado
+            addText(`Total de Multas ${tipoMultaTexto.toLowerCase()}: R$ ${totalMulta.toFixed(2)}`, margin, finalY + 20);
+
+            // Data de emissão
+            const hoje = new Date();
+            addText(`Data de emissão: ${hoje.toLocaleDateString('pt-BR')}`, margin, finalY + 35);
+
+            // Salvar PDF
+            const nomeArquivo = `Multas_${document.getElementById("contrato").value.replace(/[/\?%*:|"<>]/g, '_') || 'sem_nome'}.pdf`;
+            doc.save(nomeArquivo);
+        }
+
+        // Inicialização
+        document.addEventListener("DOMContentLoaded", function() {
+            // Mostrar/ocultar campo de dias conforme tipo de multa
+            const tipoMulta = document.getElementById("tipoMulta").value;
+            document.getElementById("diasAtrasoGroup").style.display = tipoMulta === "moratoria" ? "block" : "none";
+
+            // Limitar o máximo de dias a 30
+            document.getElementById("maxDiasAtraso").addEventListener("change", function() {
+                if (parseInt(this.value) > 30) {
+                    this.value = 30;
+                    alert("O número máximo de dias permitido é 30.");
+                }
+            });
+        });
+    </script>
+</body>
+</html>
